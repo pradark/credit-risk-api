@@ -1,0 +1,84 @@
+{
+    "widgets": [
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 0,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "Prediction Volume",
+                "view": "timeSeries",
+                "region": "us-east-1",
+                "period": 300,
+                "stat": "Sum",
+                "metrics": [
+                    [
+                        "CreditRiskAPI",
+                        "PredictionCount"
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 0,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "Average Default Probability",
+                "view": "timeSeries",
+                "region": "us-east-1",
+                "period": 300,
+                "stat": "Average",
+                "metrics": [
+                    [
+                        "CreditRiskAPI",
+                        "DefaultProbability"
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "metric",
+            "x": 0,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "High Risk Predictions",
+                "view": "timeSeries",
+                "region": "us-east-1",
+                "period": 300,
+                "stat": "Sum",
+                "metrics": [
+                    [
+                        "CreditRiskAPI",
+                        "HighRiskPredictionCount"
+                    ]
+                ]
+            }
+        },
+        {
+            "type": "metric",
+            "x": 12,
+            "y": 6,
+            "width": 12,
+            "height": 6,
+            "properties": {
+                "title": "Prediction Errors",
+                "view": "timeSeries",
+                "region": "us-east-1",
+                "period": 300,
+                "stat": "Sum",
+                "metrics": [
+                    [
+                        "CreditRiskAPI",
+                        "PredictionErrorCount"
+                    ]
+                ]
+            }
+        }
+    ]
+}
