@@ -1,0 +1,42 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.pytest_cache/
+.coverage
+
+# Virtual environments
+venv/
+.venv/
+env/
+
+# Git
+.git/
+.gitignore
+
+# IDE
+.vscode/
+.idea/
+
+# macOS
+.DS_Store
+
+# Jupyter
+.ipynb_checkpoints/
+
+# Logs
+*.log
+
+# Local model artifacts (if not needed)
+*.joblib
+
+# AWS
+aws/
+.aws/
+
+# Tests (optional for production image)
+tests/
+
+# Documentation (optional for production image)
+README.md

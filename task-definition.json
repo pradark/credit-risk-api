@@ -1,0 +1,37 @@
+{
+  "family": "credit-risk-api",
+  "networkMode": "awsvpc",
+  "requiresCompatibilities": [
+    "FARGATE"
+  ],
+  "cpu": "512",
+  "memory": "1024",
+  "executionRoleArn": "arn:aws:iam::481057028967:role/ecsTaskExecutionRole",
+  "containerDefinitions": [
+    {
+      "name": "credit-risk-api",
+      "image": "481057028967.dkr.ecr.us-east-1.amazonaws.com/credit-risk-api:v1",
+      "essential": true,
+      "portMappings": [
+        {
+          "containerPort": 8000,
+          "protocol": "tcp"
+        }
+      ],
+      "environment": [
+        {
+          "name": "MODEL_PATH",
+          "value": "/app/models/model.pkl"
+        }
+      ],
+      "logConfiguration": {
+        "logDriver": "awslogs",
+        "options": {
+          "awslogs-group": "/ecs/credit-risk-api",
+          "awslogs-region": "us-east-1",
+          "awslogs-stream-prefix": "ecs"
+        }
+      }
+    }
+  ]
+}

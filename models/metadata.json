@@ -1,0 +1,18 @@
+{
+    "model_name": "credit_default_model",
+    "model_version": "v1.0",
+    "algorithm": "LightGBM",
+    "training_date": "2026-07-29",
+    "features": [
+        "income",
+        "fico",
+        "loan_amount",
+        "age",
+        "debt",
+        "employment",
+        "balance",
+        "utilization",
+        "accounts",
+        "history"
+    ]
+}
