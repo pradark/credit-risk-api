@@ -4,6 +4,7 @@ from app.schemas import CreditRequest
 from app.model import predict_probability
 from app.logging_config import setup_logging, logger
 from app.metadata import load_metadata
+from app.s3_writer import write_parquet
 
 
 setup_logging()
@@ -31,8 +32,25 @@ def predict(request: CreditRequest):
         "Prediction request received"
     )
 
+    features = request.model_dump()
+
     probability = predict_probability(
-        request.model_dump()
+        features
+    )
+
+    write_parquet(
+        features,
+        "features"
+    )
+
+    prediction_record = {
+        **features,
+        "default_probability": probability
+    }
+
+    write_parquet(
+        prediction_record,
+        "predictions"
     )
 
     logger.info(
@@ -47,6 +65,8 @@ def predict(request: CreditRequest):
 @app.get("/model-info")
 def model_info():
 
-    logger.info("Model information requested")
+    logger.info(
+        "Model information requested"
+    )
 
     return load_metadata()

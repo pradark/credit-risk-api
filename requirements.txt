@@ -7,3 +7,5 @@ numpy
 joblib
 pytest
 httpx
+boto3
+pyarrow
