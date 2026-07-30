@@ -1,4 +1,4 @@
-nano README.md
+README.md
 
 # Credit Risk Prediction API
 
