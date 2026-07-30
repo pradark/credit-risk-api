@@ -1,10 +1,11 @@
-from fastapi import FastAPI
+from fastapi import FastAPI, HTTPException
 
 from app.schemas import CreditRequest
 from app.model import predict_probability
 from app.logging_config import setup_logging, logger
 from app.metadata import load_metadata
 from app.s3_writer import write_parquet
+from app.cloudwatch_metrics import put_metric
 
 
 setup_logging()
@@ -18,7 +19,9 @@ app = FastAPI(
 @app.get("/health")
 def health():
 
-    logger.info("Health check requested")
+    logger.info(
+        "Health check requested"
+    )
 
     return {
         "status": "healthy"
@@ -32,34 +35,89 @@ def predict(request: CreditRequest):
         "Prediction request received"
     )
 
-    features = request.model_dump()
+    try:
 
-    probability = predict_probability(
-        features
-    )
+        features = request.model_dump()
 
-    write_parquet(
-        features,
-        "features"
-    )
 
-    prediction_record = {
-        **features,
-        "default_probability": probability
-    }
+        probability = predict_probability(
+            features
+        )
 
-    write_parquet(
-        prediction_record,
-        "predictions"
-    )
 
-    logger.info(
-        f"Prediction probability={probability}"
-    )
+        # CloudWatch Metrics
 
-    return {
-        "default_probability": probability
-    }
+        put_metric(
+            "PredictionCount",
+            1
+        )
+
+
+        put_metric(
+            "DefaultProbability",
+            probability,
+            "None"
+        )
+
+
+        if probability >= 0.75:
+
+            put_metric(
+                "HighRiskPredictionCount",
+                1
+            )
+
+
+        # Write features to S3
+
+        write_parquet(
+            features,
+            "features"
+        )
+
+
+        # Write predictions to S3
+
+        prediction_record = {
+            **features,
+            "default_probability": probability
+        }
+
+
+        write_parquet(
+            prediction_record,
+            "predictions"
+        )
+
+
+        logger.info(
+            f"Prediction probability={probability}"
+        )
+
+
+        return {
+            "default_probability": probability
+        }
+
+
+    except Exception as e:
+
+        logger.error(
+            f"Prediction failed: {e}"
+        )
+
+
+        put_metric(
+            "PredictionErrorCount",
+            1
+        )
+
+
+        raise HTTPException(
+            status_code=500,
+            detail="Prediction failed"
+        )
+
 
 
 @app.get("/model-info")
