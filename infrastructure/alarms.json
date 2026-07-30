@@ -1,0 +1,22 @@
+{
+    "alarms": [
+        {
+            "name": "CreditRiskAPI-PredictionErrors",
+            "metric": "PredictionErrorCount",
+            "namespace": "CreditRiskAPI",
+            "threshold": 5,
+            "period": 300,
+            "statistic": "Sum",
+            "comparison": "GreaterThanOrEqualToThreshold"
+        },
+        {
+            "name": "CreditRiskAPI-HighRiskSpike",
+            "metric": "HighRiskPredictionCount",
+            "namespace": "CreditRiskAPI",
+            "threshold": 100,
+            "period": 3600,
+            "statistic": "Sum",
+            "comparison": "GreaterThanOrEqualToThreshold"
+        }
+    ]
+}
