@@ -91,3 +91,10 @@ PREDICTION_DRIFT_THRESHOLD = float(
         "0.10"
     )
 )
+
+MIN_PRODUCTION_SAMPLES = int(
+    os.getenv(
+        "MIN_PRODUCTION_SAMPLES",
+        "100"
+    )
+)

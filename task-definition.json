@@ -6,24 +6,41 @@
   ],
   "cpu": "512",
   "memory": "1024",
+
   "executionRoleArn": "arn:aws:iam::481057028967:role/ecsTaskExecutionRole",
+  "taskRoleArn": "arn:aws:iam::481057028967:role/credit-risk-api-task-role",
+
   "containerDefinitions": [
     {
       "name": "credit-risk-api",
-      "image": "481057028967.dkr.ecr.us-east-1.amazonaws.com/credit-risk-api:v1",
+
+      "image": "481057028967.dkr.ecr.us-east-1.amazonaws.com/credit-risk-api:v4",
+
       "essential": true,
+
       "portMappings": [
         {
           "containerPort": 8000,
+          "hostPort": 8000,
           "protocol": "tcp"
         }
       ],
+
       "environment": [
         {
           "name": "MODEL_PATH",
           "value": "/app/models/model.pkl"
+        },
+        {
+          "name": "AWS_REGION",
+          "value": "us-east-1"
+        },
+        {
+          "name": "S3_BUCKET",
+          "value": "credit-risk-monitoring-pradark"
         }
       ],
+
       "logConfiguration": {
         "logDriver": "awslogs",
         "options": {

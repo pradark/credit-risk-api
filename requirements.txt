@@ -9,4 +9,3 @@ pytest
 httpx
 boto3
 pyarrow
-watchtower

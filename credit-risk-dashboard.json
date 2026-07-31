@@ -1,0 +1,89 @@
+{
+  "widgets": [
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Prediction Volume",
+        "metrics": [
+          [
+            "CreditRiskAPI",
+            "PredictionCount"
+          ],
+          [
+            "CreditRiskAPI",
+            "PredictionErrorCount"
+          ]
+        ],
+        "period": 300,
+        "stat": "Sum",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 12,
+      "y": 0,
+      "width": 12,
+      "height": 6,
+      "properties": {
+        "title": "Risk Predictions",
+        "metrics": [
+          [
+            "CreditRiskAPI",
+            "DefaultProbability"
+          ],
+          [
+            "CreditRiskAPI",
+            "HighRiskPredictionCount"
+          ]
+        ],
+        "period": 300,
+        "stat": "Average",
+        "region": "us-east-1"
+      }
+    },
+    {
+      "type": "metric",
+      "x": 0,
+      "y": 6,
+      "width": 24,
+      "height": 8,
+      "properties": {
+        "title": "Feature Drift PSI",
+        "metrics": [
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_income"
+          ],
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_fico"
+          ],
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_employment"
+          ],
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_history"
+          ],
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_utilization"
+          ],
+          [
+            "CreditRiskAPI",
+            "FeaturePSI_balance"
+          ]
+        ],
+        "period": 86400,
+        "stat": "Average",
+        "region": "us-east-1"
+      }
+    }
+  ]
+}

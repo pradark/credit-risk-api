@@ -1,6 +1,8 @@
 import boto3
 import logging
 
+from botocore.exceptions import NoCredentialsError, ClientError
+
 from app.config import AWS_REGION
 
 
@@ -47,8 +49,23 @@ def put_metric(
             f"Published CloudWatch metric: {name}={value}"
         )
 
-    except Exception as e:
+
+    except NoCredentialsError:
+
+        logger.warning(
+            f"Skipping CloudWatch metric {name}: AWS credentials not available"
+        )
+
+
+    except ClientError as e:
 
         logger.error(
-            f"Failed to publish CloudWatch metric {name}: {e}"
+            f"CloudWatch API error for {name}: {e}"
+        )
+
+
+    except Exception as e:
+
+        logger.exception(
+            f"Unexpected CloudWatch metric failure for {name}: {e}"
         )
