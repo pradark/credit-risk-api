@@ -1,0 +1,22 @@
+[project]
+name = "credit-risk-api"
+version = "0.1.0"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "boto3>=1.43.61",
+    "fastapi>=0.141.1",
+    "joblib>=1.5.3",
+    "lightgbm>=4.7.0",
+    "numpy>=2.4.6",
+    "pandas>=3.0.5",
+    "pyarrow>=25.0.0",
+    "scikit-learn>=1.9.0",
+    "shap>=0.51.0",
+    "uvicorn>=0.52.0",
+]
+
+[dependency-groups]
+dev = [
+    "httpx>=0.28.1",
+    "pytest>=9.1.1",
+]
