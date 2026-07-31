@@ -514,3 +514,60 @@ def test_select_reasons_rejects_missing_identifier(
                 "missing_id"
             ],
         )
+
+def test_select_adverse_reasons_excludes_zero_impacts(
+    impact_data: pd.DataFrame,
+) -> None:
+    zero_impact_row = impact_data.iloc[
+        [
+            0
+        ]
+    ].copy()
+
+    zero_impact_row[
+        "attribute_name"
+    ] = "zero_feature"
+
+    zero_impact_row[
+        "attribute_impact"
+    ] = 0.0
+
+    zero_impact_row[
+        "absolute_impact"
+    ] = 0.0
+
+    zero_impact_row[
+        "ranked_impact_positive"
+    ] = 3
+
+    zero_impact_row[
+        "ranked_impact_negative"
+    ] = 1
+
+    zero_impact_row[
+        "ranked_impact_absolute"
+    ] = 3
+
+    zero_impact_row[
+        "risk_vs_typical"
+    ] = "neutral"
+
+    data_with_zero = pd.concat(
+        [
+            impact_data,
+            zero_impact_row,
+        ],
+        ignore_index=True,
+    )
+
+    result = select_reasons(
+        data_with_zero,
+        direction="adverse",
+        ranking="impact",
+        top_n="all",
+        minimum_contribution=0.0,
+    )
+
+    assert "zero_feature" not in result[
+        "attribute_name"
+    ].tolist()

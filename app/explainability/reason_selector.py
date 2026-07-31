@@ -294,7 +294,7 @@ def _filter_by_direction(
             impact_data[
                 "attribute_impact"
             ]
-            >= minimum_contribution
+            > minimum_contribution
         ].copy()
 
     if direction == "favorable":
@@ -302,7 +302,7 @@ def _filter_by_direction(
             impact_data[
                 "attribute_impact"
             ]
-            <= -minimum_contribution
+            < -minimum_contribution
         ].copy()
 
     if minimum_contribution == 0:

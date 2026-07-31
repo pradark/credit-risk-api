@@ -165,17 +165,15 @@ def dataframe_records(
             f"{missing_columns}"
         )
 
-    records = data[
+    selected_data = data[
         list(
             columns
         )
-    ].where(
+    ]
+
+    records = selected_data.where(
         pd.notna(
-            data[
-                list(
-                    columns
-                )
-            ]
+            selected_data
         ),
         None,
     ).to_dict(
@@ -410,7 +408,8 @@ def build_explanation_record(
         "compliance_flags": compliance_flags,
         "additional_metadata": (
             additional_metadata
-            or {}
+            if additional_metadata
+            else None
         ),
     }
 
@@ -440,7 +439,11 @@ def build_explanation_s3_key(
             "prediction_id cannot be empty"
         )
 
-    run_date = prediction_timestamp.date().isoformat()
+    run_date = (
+        prediction_timestamp
+        .date()
+        .isoformat()
+    )
 
     return (
         f"{prefix}/"

@@ -471,3 +471,23 @@ def test_write_explanation_to_s3(
         "application_id=application-1/"
         "explanation_prediction-1.parquet"
     )
+
+def test_explanation_record_uses_none_for_empty_metadata(
+    adverse_reasons: pd.DataFrame,
+    all_feature_contributions: pd.DataFrame,
+) -> None:
+    result = explanation_writer.build_explanation_record(
+        application_id="application-1",
+        default_probability=0.81,
+        decision_threshold=0.75,
+        adverse_reasons=adverse_reasons,
+        all_feature_contributions=(
+            all_feature_contributions
+        ),
+        additional_metadata={},
+    )
+
+    assert result.loc[
+        0,
+        "additional_metadata",
+    ] is None
