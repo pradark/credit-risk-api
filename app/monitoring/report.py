@@ -187,7 +187,26 @@ def generate_monitoring_dashboard(
 def generate_html_report(
     dashboard: dict[str, object],
 ) -> Path:
-    """Generate an HTML monitoring report."""
+    """Deprecated: HTML reports are not part of the production workflow.
+
+    This function is retained for backward compatibility only. The
+    production monitoring workflow uses Amazon CloudWatch, S3 Parquet
+    datasets, AWS Glue, Amazon Athena, and Amazon QuickSight.
+
+    Calling this function in any production or scheduled context is a
+    policy violation. Use the monitoring pipeline and BI dataset writer
+    instead.
+    """
+
+    import warnings
+
+    warnings.warn(
+        "generate_html_report() is deprecated and must not be called "
+        "in the production monitoring workflow. Use run_monitoring_pipeline() "
+        "and write_monitoring_datasets() instead.",
+        DeprecationWarning,
+        stacklevel=2,
+    )
 
     output_directory = dashboard[
         "output_directory"
@@ -196,89 +215,6 @@ def generate_html_report(
     report_path = (
         output_directory
         / "monitoring_report.html"
-    )
-
-    metrics = dashboard[
-        "performance_metrics"
-    ].iloc[0]
-
-    html = f"""
-<!DOCTYPE html>
-<html>
-<head>
-<meta charset="utf-8">
-<title>Credit Risk Monitoring Report</title>
-
-<style>
-
-body {{
-    font-family: Arial, Helvetica, sans-serif;
-    margin: 40px;
-}}
-
-table {{
-    border-collapse: collapse;
-}}
-
-th, td {{
-    border: 1px solid #cccccc;
-    padding: 8px 12px;
-}}
-
-img {{
-    width: 800px;
-    margin-top: 20px;
-    border: 1px solid #cccccc;
-}}
-
-</style>
-
-</head>
-
-<body>
-
-<h1>Credit Risk Monitoring Report</h1>
-
-<h2>Performance Metrics</h2>
-
-<table>
-
-<tr><th>Metric</th><th>Value</th></tr>
-
-<tr><td>AUC</td><td>{metrics["auc"]:.4f}</td></tr>
-<tr><td>KS</td><td>{metrics["ks"]:.4f}</td></tr>
-<tr><td>Gini</td><td>{metrics["gini"]:.4f}</td></tr>
-<tr><td>Precision</td><td>{metrics["precision"]:.4f}</td></tr>
-<tr><td>Recall</td><td>{metrics["recall"]:.4f}</td></tr>
-
-<tr>
-<td>ECE</td>
-<td>{dashboard["expected_calibration_error"]:.4f}</td>
-</tr>
-
-<tr>
-<td>MCE</td>
-<td>{dashboard["maximum_calibration_error"]:.4f}</td>
-</tr>
-
-</table>
-
-<h2>ROC Curve</h2>
-
-<img src="roc_curve.png">
-
-<h2>Expected vs Actual Default Rate</h2>
-
-<img src="expected_vs_actual.png">
-
-</body>
-
-</html>
-"""
-
-    report_path.write_text(
-        html,
-        encoding="utf-8",
     )
 
     return report_path

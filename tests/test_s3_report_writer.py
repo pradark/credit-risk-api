@@ -1,4 +1,4 @@
-"""Tests for S3 monitoring report uploads."""
+"""Tests for S3 monitoring report uploads (no HTML)."""
 
 from datetime import date
 from pathlib import Path
@@ -51,25 +51,6 @@ def report_artifacts(
         )
 
     return artifacts
-
-
-@pytest.fixture
-def html_report_path(
-    tmp_path: Path,
-) -> Path:
-    """Create a local HTML monitoring report."""
-
-    path = (
-        tmp_path
-        / "monitoring_report.html"
-    )
-
-    path.write_text(
-        "<html><body>Report</body></html>",
-        encoding="utf-8",
-    )
-
-    return path
 
 
 def test_validate_bucket_name_accepts_valid_value() -> None:
@@ -191,10 +172,6 @@ def test_build_report_s3_prefix() -> None:
             "text/csv",
         ),
         (
-            "report.html",
-            "text/html",
-        ),
-        (
             "curve.png",
             "image/png",
         ),
@@ -225,6 +202,18 @@ def test_infer_content_type(
     assert result == (
         expected_content_type
     )
+
+
+def test_infer_content_type_does_not_return_html() -> None:
+    """HTML content type must not be in the production content types."""
+
+    result = infer_content_type(
+        "report.html"
+    )
+
+    # HTML is not a supported production artifact; falls back to
+    # application/octet-stream
+    assert result == "application/octet-stream"
 
 
 def test_validate_artifact_path_accepts_file(
@@ -287,13 +276,11 @@ def test_collect_monitoring_artifacts(
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
-    """All dashboard and HTML artifacts should be collected."""
+    """Dashboard artifacts are collected without HTML."""
 
     result = collect_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
     )
 
     assert set(
@@ -303,12 +290,10 @@ def test_collect_monitoring_artifacts(
         "calibration_table.csv",
         "roc_curve.png",
         "expected_vs_actual.png",
-        "monitoring_report.html",
     }
 
-    assert result[
-        "monitoring_report.html"
-    ] == html_report_path
+    # HTML must not be included
+    assert "monitoring_report.html" not in result
 
 
 def test_collect_monitoring_artifacts_rejects_missing_key(
@@ -316,7 +301,6 @@ def test_collect_monitoring_artifacts_rejects_missing_key(
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
     """Missing dashboard paths should be rejected."""
 
@@ -337,7 +321,6 @@ def test_collect_monitoring_artifacts_rejects_missing_key(
     ):
         collect_monitoring_artifacts(
             dashboard=dashboard,
-            report_path=html_report_path,
         )
 
 
@@ -401,20 +384,18 @@ def test_build_artifact_s3_keys_rejects_empty_artifacts() -> None:
         )
 
 
-def test_upload_monitoring_artifacts(
+def test_upload_monitoring_artifacts_uploads_four_files(
     report_artifacts: dict[
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
-    """All five report artifacts should be uploaded."""
+    """Four artifacts (no HTML) should be uploaded."""
 
     client = Mock()
 
     result = upload_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
         bucket=(
             "credit-risk-monitoring-test"
         ),
@@ -442,15 +423,16 @@ def test_upload_monitoring_artifacts(
         "dt=2026-08-01"
     )
 
+    # Four files: two CSVs and two PNGs — no HTML
     assert result[
         "artifact_count"
-    ] == 5
+    ] == 4
 
     assert (
         client
         .upload_file
         .call_count
-        == 5
+        == 4
     )
 
     assert set(
@@ -462,8 +444,51 @@ def test_upload_monitoring_artifacts(
         "calibration_table.csv",
         "roc_curve.png",
         "expected_vs_actual.png",
-        "monitoring_report.html",
     }
+
+    # HTML must not be uploaded
+    assert "monitoring_report.html" not in result[
+        "artifacts"
+    ]
+
+
+def test_upload_does_not_upload_html(
+    report_artifacts: dict[
+        str,
+        Path,
+    ],
+) -> None:
+    """HTML files must never be uploaded by the production workflow."""
+
+    client = Mock()
+
+    upload_monitoring_artifacts(
+        dashboard=report_artifacts,
+        bucket="test-bucket",
+        report_date=date(
+            2026,
+            8,
+            1,
+        ),
+        s3_client=client,
+    )
+
+    call_keys = [
+        call.kwargs.get(
+            "Key",
+            ""
+        )
+        for call in (
+            client
+            .upload_file
+            .call_args_list
+        )
+    ]
+
+    assert not any(
+        ".html" in key
+        for key in call_keys
+    )
 
 
 def test_upload_uses_expected_bucket_and_keys(
@@ -471,7 +496,6 @@ def test_upload_uses_expected_bucket_and_keys(
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
     """S3 calls should use the requested bucket and partition."""
 
@@ -479,7 +503,6 @@ def test_upload_uses_expected_bucket_and_keys(
 
     upload_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
         bucket="test-bucket",
         prefix="reports",
         model_version="model-v3",
@@ -525,7 +548,6 @@ def test_upload_sets_content_types(
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
     """Each uploaded artifact should receive a content type."""
 
@@ -533,7 +555,6 @@ def test_upload_sets_content_types(
 
     upload_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
         bucket="test-bucket",
         report_date=date(
             2026,
@@ -570,17 +591,12 @@ def test_upload_sets_content_types(
         ".png"
     ] == "image/png"
 
-    assert content_types[
-        ".html"
-    ] == "text/html"
-
 
 def test_upload_adds_metadata(
     report_artifacts: dict[
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
     """Additional metadata should be included with every upload."""
 
@@ -588,7 +604,6 @@ def test_upload_adds_metadata(
 
     upload_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
         bucket="test-bucket",
         report_date=date(
             2026,
@@ -622,7 +637,6 @@ def test_upload_returns_s3_uris(
         str,
         Path,
     ],
-    html_report_path: Path,
 ) -> None:
     """The upload result should contain complete S3 URIs."""
 
@@ -630,7 +644,6 @@ def test_upload_returns_s3_uris(
 
     result = upload_monitoring_artifacts(
         dashboard=report_artifacts,
-        report_path=html_report_path,
         bucket="test-bucket",
         prefix="reports",
         model_version="model-v2",
@@ -642,18 +655,58 @@ def test_upload_returns_s3_uris(
         s3_client=client,
     )
 
-    report_result = result[
+    perf_result = result[
         "artifacts"
     ][
-        "monitoring_report.html"
+        "performance_metrics.csv"
     ]
 
-    assert report_result[
+    assert perf_result[
         "s3_uri"
     ] == (
         "s3://test-bucket/"
         "reports/"
         "model_version=model-v2/"
         "dt=2026-08-01/"
-        "monitoring_report.html"
+        "performance_metrics.csv"
     )
+
+
+def test_upload_accepts_deprecated_report_path_parameter(
+    report_artifacts: dict[
+        str,
+        Path,
+    ],
+    tmp_path: Path,
+) -> None:
+    """The deprecated report_path parameter should be accepted silently."""
+
+    client = Mock()
+
+    html_path = tmp_path / "monitoring_report.html"
+    html_path.write_text(
+        "<html></html>",
+        encoding="utf-8",
+    )
+
+    # Passing report_path should not cause an error (backward compat)
+    result = upload_monitoring_artifacts(
+        dashboard=report_artifacts,
+        bucket="test-bucket",
+        report_date=date(
+            2026,
+            8,
+            1,
+        ),
+        report_path=html_path,
+        s3_client=client,
+    )
+
+    # HTML must still not be uploaded
+    assert result[
+        "artifact_count"
+    ] == 4
+
+    assert "monitoring_report.html" not in result[
+        "artifacts"
+    ]
