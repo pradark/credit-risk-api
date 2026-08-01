@@ -1,4 +1,24 @@
-"""Generate model monitoring artifacts from prediction data."""
+"""Generate model monitoring artifacts from prediction data.
+
+DEPRECATED ENTRYPOINT — kept for backward compatibility only.
+
+The production monitoring workflow is:
+
+    uv run python scripts/run_monitoring_pipeline.py \
+        --input monitoring/performance_joined.parquet \
+        --reference-input monitoring/reference/reference_data.parquet \
+        --output-bucket <bucket> \
+        --analytics-prefix analytics \
+        --model-version credit-risk-model-v1 \
+        --environment production \
+        --publish-to-cloudwatch \
+        --write-to-s3
+
+This script now writes monitoring metrics and calibration data to CSV
+for local inspection only. It does not generate HTML reports, upload
+HTML to S3, or replace the production CloudWatch/S3/Glue/Athena
+workflow.
+"""
 
 from __future__ import annotations
 
@@ -25,7 +45,6 @@ if str(
 
 
 from app.monitoring.report import (  # noqa: E402
-    generate_html_report,
     generate_monitoring_dashboard,
 )
 
@@ -45,7 +64,10 @@ def parse_arguments() -> argparse.Namespace:
     parser = argparse.ArgumentParser(
         description=(
             "Generate credit risk model monitoring "
-            "metrics, plots, and an HTML report."
+            "metrics and plots for local inspection. "
+            "Does not generate HTML reports. "
+            "Use scripts/run_monitoring_pipeline.py "
+            "for the production AWS-native workflow."
         )
     )
 
@@ -114,12 +136,18 @@ def load_prediction_data(
         )
 
     raise ValueError(
-        "Input file must be a CSV or Parquet file."
+        "Input file must be a CSV or Parquet file. "
+        f"Unsupported extension: {suffix}"
     )
 
 
 def main() -> None:
-    """Generate monitoring artifacts and print their locations."""
+    """Generate local monitoring artifacts and print their locations.
+
+    This function does not generate HTML reports and does not call
+    generate_html_report(). Use scripts/run_monitoring_pipeline.py for
+    the production AWS-native workflow.
+    """
 
     arguments = parse_arguments()
 
@@ -138,12 +166,8 @@ def main() -> None:
         ),
     )
 
-    report_path = generate_html_report(
-        dashboard
-    )
-
     print(
-        "Monitoring artifacts generated:"
+        "Monitoring artifacts generated (local inspection only):"
     )
 
     print(
@@ -177,7 +201,12 @@ def main() -> None:
     )
 
     print(
-        f"HTML report: {report_path}"
+        "\nFor the production AWS-native workflow, run:"
+    )
+
+    print(
+        "  uv run python scripts/run_monitoring_pipeline.py "
+        "--help"
     )
 
 

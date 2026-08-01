@@ -1,4 +1,10 @@
-"""Upload model monitoring artifacts to Amazon S3."""
+"""Upload model monitoring artifacts to Amazon S3.
+
+Production monitoring uploads Parquet analytical datasets via
+bi_dataset_writer. This module uploads local diagnostic artifacts
+(CSV metrics files and PNG plots) produced during local development
+runs. HTML uploads are not supported.
+"""
 
 from __future__ import annotations
 
@@ -35,7 +41,6 @@ DASHBOARD_ARTIFACT_MAPPING = {
 
 CONTENT_TYPES = {
     ".csv": "text/csv",
-    ".html": "text/html",
     ".png": "image/png",
     ".json": "application/json",
     ".parquet": "application/octet-stream",
@@ -190,9 +195,12 @@ def validate_artifact_path(
 
 def collect_monitoring_artifacts(
     dashboard: Mapping[str, object],
-    report_path: str | Path,
 ) -> dict[str, Path]:
-    """Collect generated monitoring artifact paths."""
+    """Collect generated monitoring artifact paths from the dashboard.
+
+    Collects CSV metrics files and PNG plots only. HTML files are not
+    part of the production monitoring workflow.
+    """
 
     if not isinstance(
         dashboard,
@@ -221,12 +229,6 @@ def collect_monitoring_artifacts(
                 dashboard_key
             ]
         )
-
-    artifacts[
-        "monitoring_report.html"
-    ] = validate_artifact_path(
-        report_path
-    )
 
     return artifacts
 
@@ -268,7 +270,6 @@ def build_artifact_s3_keys(
 
 def upload_monitoring_artifacts(
     dashboard: Mapping[str, object],
-    report_path: str | Path,
     bucket: str = S3_BUCKET,
     prefix: str = DEFAULT_REPORT_PREFIX,
     model_version: str = MODEL_VERSION,
@@ -279,13 +280,16 @@ def upload_monitoring_artifacts(
     ]
     | None = None,
     s3_client: Any | None = None,
+    # Deprecated parameter — accepted but ignored for back-compat
+    report_path: Any | None = None,
 ) -> dict[str, object]:
     """Upload generated monitoring artifacts to Amazon S3.
 
-    The dashboard must contain paths returned by
-    generate_monitoring_dashboard(). The HTML report path is passed
-    separately because generate_html_report() returns it after the
-    dashboard dictionary has already been created.
+    Uploads CSV metric files and PNG plots produced by
+    generate_monitoring_dashboard(). HTML files are never uploaded.
+
+    The report_path parameter is deprecated and ignored. It is accepted
+    only to avoid breaking existing callers during migration.
     """
 
     validate_bucket_name(
@@ -294,7 +298,6 @@ def upload_monitoring_artifacts(
 
     artifacts = collect_monitoring_artifacts(
         dashboard=dashboard,
-        report_path=report_path,
     )
 
     object_keys = build_artifact_s3_keys(
